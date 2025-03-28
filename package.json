@@ -1,6 +1,6 @@
 {
   "name": "@shader-motion/carousel",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "A WebGL-based carousel component built on gl-layer, offering smooth transitions and shader-powered animations.",
   "main": "dist/index.js",
@@ -28,7 +28,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/abeltyr/shadermotion-carousel"
+    "url": "git+https://github.com/abeltyr/shadermotion-carousel.git"
   },
   "author": "Abel Lamesgen <abeltyr@gmail.com>",
   "license": "MIT",
@@ -52,5 +52,12 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "gsap": "^3.12.7"
+  },
+  "bugs": {
+    "url": "https://github.com/abeltyr/shadermotion-carousel/issues"
+  },
+  "homepage": "https://github.com/abeltyr/shadermotion-carousel#readme",
+  "directories": {
+    "test": "test"
   }
 }
