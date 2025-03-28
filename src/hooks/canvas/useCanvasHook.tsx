@@ -1,6 +1,4 @@
-'use client'
-
-import { RenderSize, CanvasRefType, renderWebGL, setFloatUniform, ProgramInfoRefType } from 'gl-layer';
+import { CanvasRefType, renderWebGL, setFloatUniform, ProgramInfoRefType } from 'gl-layer';
 import { initializeWebGL, WebGLUniform } from 'gl-layer';
 import { useCallback } from 'react';
 import { render } from './render';
