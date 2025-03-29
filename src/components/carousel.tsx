@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { BuffersRefType, loadImageTextures, ProgramInfoRefType, setFloatUniform, setVec2Uniform } from 'gl-layer';
-import gsap from "gsap";
-import { useLayoutCanvas } from '../hooks/canvas/useCanvasHook';
+import { BuffersRefType, loadImageTextures, ProgramInfoRefType, setFloatUniform } from 'gl-layer';
+import { useCanvasHooks } from '../hooks/canvas/useCanvasHook';
 import { shaders } from '../canvas/shaders';
 import { uniforms } from '../canvas/uniforms/uniforms';
 import { WebGLShapeProps } from '../types/shared';
@@ -15,16 +14,21 @@ export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
     const glRef = useRef<WebGLRenderingContext | null>(null);  // WebGL rendering context
     const programInfoRef = useRef<ProgramInfoRefType | null>(null);  // Stores compiled shader programs and attributes
     const buffersRef = useRef<BuffersRefType | null>(null);
-    const texturesRef = useRef<{
-        textures: WebGLTexture[]
-    }>({ textures: [] });
+    const texturesRef = useRef<{ textures: WebGLTexture[] }>({ textures: [] });
     const [loading, setLoading] = useState(true);
 
-    const { resizeUpdate, increaseRadius, initializer } = useLayoutCanvas();
+    const {
+        resizeUpdate,
+        increaseRadius,
+        initializer,
+        handleImageTransition,
+        handleMouseMove
+    } = useCanvasHooks();
 
+    const [index, setIndex] = useState(1);
 
-    const mainCanvasSetter = useCallback(async () => {
-        if (canvasRef.current) {
+    const canvasSetter = useCallback(async () => {
+        if (canvasRef.current && glRef.current) {
             const textures = await loadImageTextures({
                 gl: glRef.current,
                 images: images
@@ -44,15 +48,15 @@ export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
                     vertexShaderSource: shaders.carousel.vertexShaderSource,
                 },
                 uniforms: uniforms.carousel,
-                textures
+                textures,
+                index
             });
         }
     }, [canvasRef.current, images])
 
-
     // Effect hook to reinitialize canvas when size changes
     useEffect(() => {
-        mainCanvasSetter();
+        canvasSetter();
     }, [canvasRef.current, loading])
 
     // Effect hook to reinitialize canvas when size changes
@@ -68,7 +72,6 @@ export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
     }, [size])
 
 
-    const [index, setIndex] = useState(0);
 
     // Effect hook to reinitialize canvas when size changes
     useEffect(() => {
@@ -76,7 +79,6 @@ export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
             requestAnimationFrame(animate);
         }
     }, [canvasRef.current])
-
 
     const animate = (time: number) => {
         if (glRef.current && programInfoRef.current) {
@@ -91,7 +93,6 @@ export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
         }
     }
 
-
     const [leftTrue, setLeftTrue] = useState(true)
 
     return (
@@ -99,84 +100,10 @@ export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
             onClick={() => {
                 increaseRadius({ duration: 2, glRef, programInfoRef });
                 setTimeout(async () => {
-                    if (glRef.current && programInfoRef.current) {
-
-                        let currentIndex = index + 1;
-                        let previousIndex = index;
-                        let nextIndex = index + 2;
-
-                        if (!leftTrue) {
-                            // Moving forward
-                            currentIndex = (index + 1) % texturesRef.current.textures.length;
-                            previousIndex = index;
-                            nextIndex = (currentIndex + 1) % texturesRef.current.textures.length;
-                        } else {
-                            // Moving backward
-                            currentIndex = index - 1;
-                            if (currentIndex < 0) currentIndex = texturesRef.current.textures.length - 1;
-                            previousIndex = (currentIndex - 1 + texturesRef.current.textures.length) % texturesRef.current.textures.length;
-                            nextIndex = (currentIndex + 1) % texturesRef.current.textures.length;
-                        }
-
-                        setIndex(currentIndex)
-                        glRef.current.activeTexture(glRef.current.TEXTURE0);
-                        glRef.current.bindTexture(glRef.current.TEXTURE_2D, texturesRef.current.textures[currentIndex]);
-                        glRef.current.uniform1i(programInfoRef.current.uniformLocations.uTextureCurrent, 0);
-
-                        glRef.current.drawArrays(glRef.current.TRIANGLE_STRIP, 0, 4);
-                        glRef.current.activeTexture(glRef.current.TEXTURE1);
-                        glRef.current.bindTexture(glRef.current.TEXTURE_2D, texturesRef.current.textures[nextIndex]);
-                        glRef.current.uniform1i(programInfoRef.current.uniformLocations.uTextureNext, 1);
-
-                        glRef.current.drawArrays(glRef.current.TRIANGLE_STRIP, 0, 4);
-                        glRef.current.activeTexture(glRef.current.TEXTURE2);
-                        glRef.current.bindTexture(glRef.current.TEXTURE_2D, texturesRef.current.textures[previousIndex]);
-                        glRef.current.uniform1i(programInfoRef.current.uniformLocations.uTexturePrevious, 2);
-
-                        glRef.current.drawArrays(glRef.current.TRIANGLE_STRIP, 0, 4);
-
-                        const obj = { value: 0 };
-
-                        gsap.to(obj, {
-                            value: 0.2,
-                            duration: 1,
-                            ease: "power1.inOut",
-                            onUpdate: () => {
-                                console.log(obj.value); // You can use this value for UI updates
-
-                                if (glRef.current && programInfoRef.current) {
-                                    glRef.current.uniform1f(programInfoRef.current.uniformLocations.uRadius, obj.value);
-                                    glRef.current.drawArrays(glRef.current.TRIANGLE_STRIP, 0, 4);
-                                }
-                            },
-                            onComplete: () => {
-                                console.log("Animation complete!");
-                            }
-                        });
-                    }
+                    await handleImageTransition(glRef, programInfoRef, texturesRef, index, setIndex, leftTrue, increaseRadius);
                 }, 2100)
-
             }}
-            onMouseMove={async (event) => {
-                const rect = event.currentTarget.getBoundingClientRect();
-                const x = event.clientX - rect.left;
-                const y = event.clientY - rect.top;
-                if (x >= 0 && y >= 0) {
-                    if (glRef.current && programInfoRef.current) {
-                        setVec2Uniform({
-                            gl: glRef.current,
-                            render: true,
-                            uniformLocation: programInfoRef.current.uniformLocations.uMouse,
-                            value: {
-                                x: x / size.width,
-                                y: y / size.height
-                            }
-                        })
-
-                        setLeftTrue(x / size.width < 0.5)
-                    }
-                }
-            }}
+            onMouseMove={(event) => handleMouseMove({ event, size, glRef, programInfoRef, setLeftTrue })}
             ref={canvasRef}
             style={{
                 display: 'block',
