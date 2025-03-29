@@ -1,4 +1,9 @@
-import { CanvasRefType, initializeWebGL, WebGLUniform } from "gl-layer";
+import {
+  CanvasRefType,
+  initializeWebGL,
+  RenderSize,
+  WebGLUniform,
+} from "gl-layer";
 import { render } from "./render";
 
 export const useCanvasInitializer = () => {
@@ -8,6 +13,7 @@ export const useCanvasInitializer = () => {
     uniforms,
     textures,
     index,
+    size,
   }: {
     canvasRef: CanvasRefType;
     shader: {
@@ -17,22 +23,24 @@ export const useCanvasInitializer = () => {
     uniforms: WebGLUniform[];
     textures: WebGLTexture[];
     index: number;
+    size: RenderSize;
   }) => {
     const canvas = canvasRef.canvasRef.current;
-    const size = {
-      width: window.innerWidth,
-      height: window.innerHeight,
-    };
-    if (size.width > 0 && size.height > 0 && canvas) {
+
+    if (canvas && size.width > 0 && size.height > 0) {
       canvas.width = size.width;
       canvas.height = size.height;
 
-      const gl = canvas.getContext("webgl");
+      let gl = canvasRef.glRef.current;
+      if (!canvasRef.glRef.current) {
+        gl = canvas.getContext("webgl");
+        canvasRef.glRef.current = gl;
+      }
+
       if (!gl) {
         console.error("Unable to initialize WebGL");
         return;
       }
-      canvasRef.glRef.current = gl;
       const data = initializeWebGL({
         gl,
         shader: {
@@ -40,11 +48,13 @@ export const useCanvasInitializer = () => {
           vertexShaderSource: shader.vertexShaderSource,
         },
         uniforms: uniforms,
+        vertexPositionName: "aPosition",
       });
 
       if (data) {
         canvasRef.programInfoRef.current = await data.programInfoRefCurrent;
         canvasRef.buffersRef.current = await data.buffersRefCurrent;
+
         render({
           buffersRefCurrent: data.buffersRefCurrent,
           glRefCurrent: gl,

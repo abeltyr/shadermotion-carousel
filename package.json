@@ -46,7 +46,7 @@
     "typescript": "5.8.2"
   },
   "dependencies": {
-    "gl-layer": "0.2.0"
+    "gl-layer": "0.2.1"
   },
   "peerDependencies": {
     "react": "^19.0.0",

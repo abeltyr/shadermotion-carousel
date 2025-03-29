@@ -9,13 +9,14 @@ export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
     size,
     images,
 }) => {
-
     const canvasRef = useRef<HTMLCanvasElement>(null);  // Reference to the canvas DOM element
     const glRef = useRef<WebGLRenderingContext | null>(null);  // WebGL rendering context
     const programInfoRef = useRef<ProgramInfoRefType | null>(null);  // Stores compiled shader programs and attributes
     const buffersRef = useRef<BuffersRefType | null>(null);
     const texturesRef = useRef<{ textures: WebGLTexture[] }>({ textures: [] });
     const [loading, setLoading] = useState(true);
+
+    // TODO: setup ui import for the loading or make the loading and setLoading be sent from the parent
 
     const {
         resizeUpdate,
@@ -25,15 +26,23 @@ export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
         handleMouseMove
     } = useCanvasHooks();
 
-    const [index, setIndex] = useState(1);
+    const [index, setIndex] = useState(4);
 
     const canvasSetter = useCallback(async () => {
-        if (canvasRef.current && glRef.current) {
+        if (canvasRef.current) {
+            const canvas = canvasRef.current;
+            const gl = canvas.getContext("webgl");
+            if (!gl) {
+                console.error("Unable to initialize WebGL");
+                return;
+            }
+            glRef.current = gl;
             const textures = await loadImageTextures({
-                gl: glRef.current,
+                gl: gl,
                 images: images
             })
             texturesRef.current = { textures: [...textures] }
+
             await initializer({
                 canvasRef: {
                     buffersRef,
@@ -48,16 +57,18 @@ export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
                     vertexShaderSource: shaders.carousel.vertexShaderSource,
                 },
                 uniforms: uniforms.carousel,
-                textures,
-                index
+                textures: texturesRef.current.textures,
+                index,
+                size,
             });
+            requestAnimationFrame(animate);
         }
     }, [canvasRef.current, images])
 
     // Effect hook to reinitialize canvas when size changes
     useEffect(() => {
         canvasSetter();
-    }, [canvasRef.current, loading])
+    }, [])
 
     // Effect hook to reinitialize canvas when size changes
     useEffect(() => {
@@ -73,27 +84,20 @@ export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
 
 
 
-    // Effect hook to reinitialize canvas when size changes
-    useEffect(() => {
-        if (loading) {
-            requestAnimationFrame(animate);
-        }
-    }, [canvasRef.current])
-
     const animate = (time: number) => {
         if (glRef.current && programInfoRef.current) {
-            const seconds = time * 0.001; // Convert time (milliseconds) to seconds
             setFloatUniform({
                 gl: glRef.current,
                 render: true,
                 uniformLocation: programInfoRef.current.uniformLocations.uTime,
-                value: seconds
+                value: time * 0.001
             });
             requestAnimationFrame(animate);  // Call next frame}
         }
     }
 
     const [leftTrue, setLeftTrue] = useState(true)
+
 
     return (
         <canvas

@@ -1,5 +1,5 @@
-import { ProgramInfoRefType, setFloatUniform, setImageUniform } from "gl-layer";
 import { shiftLeft, shiftRight } from "@/utils/circularIndex";
+import { ProgramInfoRefType, setFloatUniform, setImageUniform } from "gl-layer";
 
 export const useImageTransition = () => {
   const handleImageTransition = async (
@@ -22,7 +22,7 @@ export const useImageTransition = () => {
       let previousIndex = index;
       let nextIndex = index + 2;
 
-      if (!leftTrue) {
+      if (leftTrue) {
         const data = shiftLeft({
           index,
           length: texturesRef.current.textures.length,
@@ -57,7 +57,7 @@ export const useImageTransition = () => {
         uniformLocation:
           programInfoRef.current.uniformLocations.uTexturePrevious,
         index: 0,
-        textureNumber: 0,
+        textureNumber: glRef.current.TEXTURE0,
       });
       setImageUniform({
         gl: glRef.current,
@@ -65,14 +65,14 @@ export const useImageTransition = () => {
         uniformLocation:
           programInfoRef.current.uniformLocations.uTextureCurrent,
         index: 1,
-        textureNumber: 1,
+        textureNumber: glRef.current.TEXTURE1,
       });
       setImageUniform({
         gl: glRef.current,
         texture: texturesRef.current.textures[nextIndex],
         uniformLocation: programInfoRef.current.uniformLocations.uTextureNext,
         index: 2,
-        textureNumber: 2,
+        textureNumber: glRef.current.TEXTURE2,
         render: true,
       });
 

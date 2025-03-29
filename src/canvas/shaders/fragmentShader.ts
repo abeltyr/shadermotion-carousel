@@ -31,7 +31,7 @@ export const fragmentShaderSource = `
         float randomOffset = noise(uv * 50.0) * 0.05;
         
         // Final "cloudy" mask with gaps
-        float cloudMask = smoothstep(dynamicRadius  + randomOffset, dynamicRadius * 0.48, dist);
+        float cloudMask = smoothstep(dynamicRadius  + randomOffset, dynamicRadius * .28, dist);
 
         // Sample both textures
         vec4 currentColor = texture2D(uTextureCurrent, uv);

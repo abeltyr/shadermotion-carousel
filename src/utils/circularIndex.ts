@@ -12,11 +12,12 @@ export const getCircularIndices = ({
   index: number;
 }) => {
   // Ensure index is within bounds
-  const normalizedIndex = ((index % length) + length) % length;
+  const normalizedIndex =
+    ((index % (length - 1)) + (length - 1)) % (length - 1);
 
   return {
-    next: (normalizedIndex + 1) % length,
-    previous: (normalizedIndex - 1 + length) % length,
+    next: (normalizedIndex + 1) % (length - 1),
+    previous: (normalizedIndex - 1 + (length - 1)) % (length - 1),
     current: normalizedIndex,
   };
 };
@@ -34,10 +35,10 @@ export const shiftLeft = ({
   length: number;
   index: number;
 }) => {
-  const current = (index - 1 + length) % length;
+  const current = (index - 1 + (length - 1)) % (length - 1);
   return {
-    next: (current + 1) % length,
-    previous: (current - 1 + length) % length,
+    next: (current + 1) % (length - 1),
+    previous: (current - 1 + (length - 1)) % (length - 1),
     current,
   };
 };
@@ -55,10 +56,10 @@ export const shiftRight = ({
   length: number;
   index: number;
 }) => {
-  const current = (index + 1) % length;
+  const current = (index + 1) % (length - 1);
   return {
-    next: (current + 1) % length,
-    previous: (current - 1 + length) % length,
+    next: (current + 1) % (length - 1),
+    previous: (current - 1 + (length - 1)) % (length - 1),
     current,
   };
 };

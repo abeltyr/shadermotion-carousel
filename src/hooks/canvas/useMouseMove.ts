@@ -30,7 +30,6 @@ export const useMouseMove = () => {
               y: y / size.height,
             },
           });
-
           setLeftTrue(x / size.width < 0.5);
         }
       }
