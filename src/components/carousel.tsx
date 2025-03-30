@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { BuffersRefType, loadImageTextures, ProgramInfoRefType, setFloatUniform } from 'gl-layer';
+import { BuffersRefType, loadImageTextures, ProgramInfoRefType, RenderSize, setFloatUniform } from 'gl-layer';
 import { useCanvasHooks } from '../hooks/canvas/useCanvasHook';
 import { shaders } from '../canvas/shaders';
 import { uniforms } from '../canvas/uniforms/uniforms';
@@ -8,7 +8,11 @@ import { WebGLShapeProps } from '../types/shared';
 export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
     size,
     images,
+    mouse,
+    radius,
+    timeRange,
 }) => {
+    const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);  // Reference to the canvas DOM element
     const glRef = useRef<WebGLRenderingContext | null>(null);  // WebGL rendering context
     const programInfoRef = useRef<ProgramInfoRefType | null>(null);  // Stores compiled shader programs and attributes
@@ -16,6 +20,9 @@ export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
     const texturesRef = useRef<{ textures: WebGLTexture[] }>({ textures: [] });
     const [loading, setLoading] = useState(true);
 
+    // TODO: setup the middle Clicking animation
+    // TODO: setup the time of the animation
+    // TODO: setup the change to zero be smother
     // TODO: setup ui import for the loading or make the loading and setLoading be sent from the parent
 
     const {
@@ -29,7 +36,7 @@ export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
     const [index, setIndex] = useState(4);
 
     const canvasSetter = useCallback(async () => {
-        if (canvasRef.current) {
+        if (canvasRef.current && containerRef.current) {
             const canvas = canvasRef.current;
             const gl = canvas.getContext("webgl");
             if (!gl) {
@@ -60,6 +67,9 @@ export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
                 textures: texturesRef.current.textures,
                 index,
                 size,
+                mouse,
+                radius,
+                timeRange
             });
             requestAnimationFrame(animate);
         }
@@ -73,12 +83,15 @@ export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
     // Effect hook to reinitialize canvas when size changes
     useEffect(() => {
         resizeUpdate({
-            buffersRef,
-            canvasRef,
-            glRef,
-            programInfoRef,
-            loading,
-            setLoading
+            size,
+            canvasDataSet: {
+                buffersRef,
+                canvasRef,
+                glRef,
+                programInfoRef,
+                loading,
+                setLoading,
+            }
         })
     }, [size])
 
@@ -98,24 +111,25 @@ export const CarouselWebGL: React.FC<WebGLShapeProps> = ({
 
     const [leftTrue, setLeftTrue] = useState(true)
 
-
     return (
-        <canvas
-            onClick={() => {
-                increaseRadius({ duration: 2, glRef, programInfoRef });
-                setTimeout(async () => {
-                    await handleImageTransition(glRef, programInfoRef, texturesRef, index, setIndex, leftTrue, increaseRadius);
-                }, 2100)
-            }}
-            onMouseMove={(event) => handleMouseMove({ event, size, glRef, programInfoRef, setLeftTrue })}
-            ref={canvasRef}
-            style={{
-                display: 'block',
-                width: '100%',
-                height: '100%',
-            }}
-            width={size.width}
-            height={size.height}
-        />
+        <div className='min-w-full min-h-full' ref={containerRef}>
+            <canvas
+                onClick={() => {
+                    increaseRadius({ duration: 2, glRef, programInfoRef });
+                    setTimeout(async () => {
+                        await handleImageTransition(glRef, programInfoRef, texturesRef, index, setIndex, leftTrue, increaseRadius);
+                    }, 2100)
+                }}
+                onMouseMove={(event) => handleMouseMove({ event, size, glRef, programInfoRef, setLeftTrue })}
+                ref={canvasRef}
+                style={{
+                    display: 'block',
+                    width: '100%',
+                    height: '100%',
+                }}
+                width={size.width}
+                height={size.height}
+            />
+        </div>
     );
 };

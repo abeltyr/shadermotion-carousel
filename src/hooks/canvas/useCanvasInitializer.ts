@@ -14,6 +14,9 @@ export const useCanvasInitializer = () => {
     textures,
     index,
     size,
+    mouse,
+    radius,
+    timeRange,
   }: {
     canvasRef: CanvasRefType;
     shader: {
@@ -24,6 +27,9 @@ export const useCanvasInitializer = () => {
     textures: WebGLTexture[];
     index: number;
     size: RenderSize;
+    radius?: number;
+    mouse?: { x: number; y: number };
+    timeRange?: number;
   }) => {
     const canvas = canvasRef.canvasRef.current;
 
@@ -54,7 +60,6 @@ export const useCanvasInitializer = () => {
       if (data) {
         canvasRef.programInfoRef.current = await data.programInfoRefCurrent;
         canvasRef.buffersRef.current = await data.buffersRefCurrent;
-
         render({
           buffersRefCurrent: data.buffersRefCurrent,
           glRefCurrent: gl,
@@ -62,6 +67,9 @@ export const useCanvasInitializer = () => {
           sizeData: size,
           textures,
           index,
+          mouse,
+          radius,
+          timeRange,
         });
         canvasRef.setLoading(false);
       }

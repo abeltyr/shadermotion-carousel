@@ -1,17 +1,19 @@
-import { CanvasRefType, renderWebGL } from "gl-layer";
+import { CanvasRefType, RenderSize, renderWebGL } from "gl-layer";
 
 export const useCanvasResize = () => {
-  const resizeUpdate = async (canvasDataSet: CanvasRefType) => {
+  const resizeUpdate = async ({
+    canvasDataSet,
+    size,
+  }: {
+    canvasDataSet: CanvasRefType;
+    size: RenderSize;
+  }) => {
     if (canvasDataSet.loading) return;
     if (
       canvasDataSet.canvasRef.current &&
       canvasDataSet.programInfoRef.current &&
       canvasDataSet.buffersRef.current
     ) {
-      const size = {
-        width: window.innerWidth,
-        height: window.innerHeight,
-      };
       canvasDataSet.canvasRef.current.width = size.width;
       canvasDataSet.canvasRef.current.height = size.height;
       const gl = canvasDataSet.canvasRef.current.getContext("webgl");

@@ -16,6 +16,9 @@ export const render = async ({
   sizeData,
   textures,
   index,
+  mouse = { x: 0.5, y: 0.5 },
+  radius = 0.25,
+  timeRange = 0.5,
 }: {
   glRefCurrent: WebGLRenderingContext;
   buffersRefCurrent: BuffersRefType;
@@ -23,6 +26,9 @@ export const render = async ({
   sizeData: RenderSize;
   textures: WebGLTexture[];
   index: number;
+  radius?: number;
+  mouse?: { x: number; y: number };
+  timeRange?: number;
 }) => {
   await renderWebGL({
     gl: glRefCurrent,
@@ -38,22 +44,19 @@ export const render = async ({
       setFloatUniform({
         gl: glRefCurrent,
         uniformLocation: programInfoRefCurrent.uniformLocations.uRadius,
-        value: 0.25,
+        value: radius,
       });
 
       setVec2Uniform({
         gl: glRefCurrent,
         uniformLocation: programInfoRefCurrent.uniformLocations.uMouse,
-        value: {
-          x: 0.5,
-          y: 0.5,
-        },
+        value: mouse,
       });
 
       setFloatUniform({
         gl: glRefCurrent,
         uniformLocation: programInfoRefCurrent.uniformLocations.uTimeRange,
-        value: 0.5,
+        value: timeRange,
       });
 
       setImageUniform({
